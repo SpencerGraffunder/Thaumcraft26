@@ -23,6 +23,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import thaumcraft.api.aspects.Aspect;
+import thaumcraft.api.aspects.AspectList;
 import thaumcraft.api.casters.FocusPackage;
 import thaumcraft.api.casters.ICaster;
 import thaumcraft.api.casters.IInteractWithCaster;
@@ -117,18 +119,107 @@ public class ItemCaster extends Item implements ICaster {
     @Override
     public boolean consumeVis(ItemStack stack, Player player, float amount, boolean crafting, boolean simulate) {
         amount *= getConsumptionModifier(stack, player, crafting);
-        
+
+        // The wand's own vis buffer (filled by tapping aura nodes) is spent first.
+        int bufferPoints = Math.min(getVisBuffer(stack).visSize(), (int) Math.floor(amount));
+        if (bufferPoints > 0) {
+            float available = bufferPoints + getAuraPool(player);
+            if (available < amount) {
+                return false;
+            }
+            if (simulate) {
+                return true;
+            }
+            drainBuffer(stack, bufferPoints);
+            amount -= bufferPoints;
+        }
+
+        if (amount <= 0.0F) {
+            return true;
+        }
+
         float available = getAuraPool(player);
         if (available < amount) {
             return false;
         }
-        
+
         if (simulate) {
             return true;
         }
-        
+
         // Drain vis from the aura
         return drainFromAura(player, amount);
+    }
+
+    // ==================== Wand Vis Buffer (node tapper) ====================
+
+    /** Vis capacity of this gauntlet tier, for the node-tapped buffer. */
+    public int getBufferCapacity() {
+        return switch (auraArea) {
+            case 2 -> 100;
+            case 1 -> 60;
+            default -> 40;
+        };
+    }
+
+    public static int bufferCapacity(ItemStack stack) {
+        return stack.getItem() instanceof ItemCaster caster ? caster.getBufferCapacity() : 0;
+    }
+
+    /** The per-aspect vis buffer stored on the gauntlet (TC6 wand vis parity). */
+    public static AspectList getVisBuffer(ItemStack stack) {
+        CompoundTag data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        AspectList buffer = new AspectList();
+        if (data.contains("vis")) {
+            buffer.readFromNBT(data.getCompoundOrEmpty("vis"));
+        }
+        return buffer;
+    }
+
+    private static void setVisBuffer(ItemStack stack, AspectList buffer) {
+        CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        CompoundTag vis = new CompoundTag();
+        buffer.writeToNBT(vis);
+        if (vis.isEmpty()) {
+            tag.remove("vis");
+        } else {
+            tag.put("vis", vis);
+        }
+        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
+    }
+
+    public static int bufferAmountOf(ItemStack stack, Aspect aspect) {
+        return getVisBuffer(stack).getAmount(aspect);
+    }
+
+    /**
+     * Add up to {@code offered} points of {@code aspect} to the buffer.
+     * Returns the number of points NOT accepted (buffer full).
+     */
+    public static int topUpBuffer(ItemStack stack, Aspect aspect, int offered) {
+        if (offered <= 0 || !(stack.getItem() instanceof ItemCaster)) {
+            return offered;
+        }
+        AspectList buffer = getVisBuffer(stack);
+        int room = Math.max(0, bufferCapacity(stack) - buffer.visSize());
+        int accepted = Math.min(offered, room);
+        if (accepted > 0) {
+            buffer.add(aspect, accepted);
+            setVisBuffer(stack, buffer);
+        }
+        return offered - accepted;
+    }
+
+    /** Drain up to {@code points} int vis from the buffer, across held aspects. */
+    private static void drainBuffer(ItemStack stack, int points) {
+        AspectList buffer = getVisBuffer(stack);
+        for (Aspect aspect : buffer.getAspects()) {
+            if (points <= 0) break;
+            int take = Math.min(buffer.getAmount(aspect), points);
+            buffer.remove(aspect, take);
+            points -= take;
+        }
+        setVisBuffer(stack, buffer);
     }
     
     /**

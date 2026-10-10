@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "thaumcraft:node_stabilizer",
+    "thaumcraft:thaumium_ingot"
+  ],
+  "result": {
+    "id": "thaumcraft:node_stabilizer_advanced",
+    "count": 2
+  }
+}

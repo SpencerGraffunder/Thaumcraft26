@@ -15,6 +15,7 @@ import thaumcraft.common.world.structures.AncientStoneCircleFeature;
 import thaumcraft.common.world.structures.BarrowFeature;
 import thaumcraft.common.world.structures.EldritchObeliskFeature;
 import thaumcraft.common.world.structures.RuinedTowerFeature;
+import thaumcraft.common.world.node.NodeFeature;
 
 /**
  * Registry for all Thaumcraft world generation feature TYPES.
@@ -93,6 +94,15 @@ public class ModFeatures {
     public static final DeferredHolder<MapCodec<? extends Feature>, MapCodec<ThaumcraftPlantFeature>> VISHROOM_PATCH =
             FEATURE_TYPES.register("vishroom_patch",
                     () -> ThaumcraftPlantFeature.codecFor(ThaumcraftPlantFeature.PlantType.VISHROOM));
+
+    // ==================== Aura Node Feature ====================
+
+    /**
+     * Aura node - underground vis source (TC6 node system).
+     * Placed below the world surface via rarity + height placement rules.
+     */
+    public static final DeferredHolder<MapCodec<? extends Feature>, MapCodec<NodeFeature>> NODE =
+            FEATURE_TYPES.register("node", () -> NodeFeature.CODEC);
 
     // ==================== Crystal Features ====================
 

@@ -1,0 +1,90 @@
+{
+  "entries": [
+    {
+      "key": "NODE",
+      "name": "research.NODE.title",
+      "icons": [ "thaumcraft:textures/research/r_nodes.png" ],
+      "category": "NODE",
+      "location": [ 0, 0 ],
+      "parents": [ "BASEAUROMANCY" ],
+      "meta": [ "ROUND" ],
+      "stages": [
+        {
+          "text": "research.NODE.stage.1"
+        }
+      ]
+    },
+    {
+      "key": "NODETAPPER1",
+      "name": "research.NODETAPPER1.title",
+      "icons": [ "thaumcraft:thaumometer" ],
+      "category": "NODE",
+      "location": [ 0, 2 ],
+      "parents": [ "NODE" ],
+      "stages": [
+        {
+          "text": "research.NODETAPPER1.stage.1",
+          "required_knowledge": [ "THEORY;NODE;1" ]
+        }
+      ]
+    },
+    {
+      "key": "NODETAPPER2",
+      "name": "research.NODETAPPER2.title",
+      "icons": [ "thaumcraft:thaumometer" ],
+      "category": "NODE",
+      "location": [ 0, 4 ],
+      "parents": [ "NODETAPPER1" ],
+      "stages": [
+        {
+          "text": "research.NODETAPPER2.stage.1",
+          "required_knowledge": [ "THEORY;NODE;2" ]
+        }
+      ]
+    },
+    {
+      "key": "NODESTAB",
+      "name": "research.NODESTAB.title",
+      "icons": [ "thaumcraft:node_stabilizer" ],
+      "category": "NODE",
+      "location": [ -2, 2 ],
+      "parents": [ "NODE" ],
+      "stages": [
+        {
+          "text": "research.NODESTAB.stage.1",
+          "recipes": [ "thaumcraft:node_stabilizer" ],
+          "required_knowledge": [ "THEORY;NODE;1" ]
+        }
+      ]
+    },
+    {
+      "key": "NODEJARS",
+      "name": "research.NODEJARS.title",
+      "icons": [ "thaumcraft:node_jar" ],
+      "category": "NODE",
+      "location": [ -2, 4 ],
+      "parents": [ "NODESTAB" ],
+      "stages": [
+        {
+          "text": "research.NODEJARS.stage.1",
+          "recipes": [ "thaumcraft:node_jar" ],
+          "required_knowledge": [ "THEORY;NODE;2" ]
+        }
+      ]
+    },
+    {
+      "key": "NODEPEARLS",
+      "name": "research.NODEPEARLS.title",
+      "icons": [ "thaumcraft:primordial_pearl" ],
+      "category": "NODE",
+      "location": [ 2, 2 ],
+      "parents": [ "NODE" ],
+      "stages": [
+        {
+          "text": "research.NODEPEARLS.stage.1",
+          "required_knowledge": [ "THEORY;NODE;1" ]
+        }
+      ]
+    }
+  ]
+}

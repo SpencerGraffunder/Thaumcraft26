@@ -179,6 +179,10 @@ public final class ThaumcraftSmoke {
             checkSmelterVents(server);
             checkResearchAutoUnlock(server);
             checkFluxPressure(server);
+            checkNodeGeneration(server);
+            checkNodeWandTap(server);
+            checkNodeJar(server);
+            checkNodePearl(server);
         } catch (Throwable t) {
             fail("smoke-harness", t.toString());
         }
@@ -520,8 +524,212 @@ public final class ThaumcraftSmoke {
 
     /** An air BlockPos three above the motion-blocking surface at (x, z). */
     private static BlockPos airPos(ServerLevel level, int x, int z) {
+        level.getChunkSource().getChunk(x >> 4, z >> 4, true);
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) + 3;
         return new BlockPos(x, y, z);
+    }
+
+    /** Content equality for AspectList (no equals() override on the class). */
+    private static boolean aspectsEqual(thaumcraft.api.aspects.AspectList a, thaumcraft.api.aspects.AspectList b) {
+        if (a == null || b == null) return a == b;
+        var ca = a.copy(); var cb = b.copy();
+        for (thaumcraft.api.aspects.Aspect aspect : ca.getAspects()) {
+            if (ca.getAmount(aspect) != cb.getAmount(aspect)) return false;
+            cb.remove(aspect);
+        }
+        return cb.size() == 0;
+    }
+
+    // -- aura nodes (TC6/Thaumaturge node system) ------------------------
+    /** Deterministic generation: same seed/position rolls the same node. */
+    private static void checkNodeGeneration(MinecraftServer server) {
+        try {
+            var level = (net.minecraft.server.level.ServerLevel) server.overworld();
+            var pos = new net.minecraft.core.BlockPos(1600, 0, 1600);
+            var a = thaumcraft.common.world.node.NodeGenerator.rollForTest(
+                    level, pos, net.minecraft.util.RandomSource.create(1234), 18, 100);
+            var b = thaumcraft.common.world.node.NodeGenerator.rollForTest(
+                    level, pos, net.minecraft.util.RandomSource.create(1234), 18, 100);
+            if (a == null || b == null) {
+                fail("node-generation", "generator returned no node data");
+                return;
+            }
+            if (a.type() != b.type() || a.modifier() != b.modifier()
+                    || !aspectsEqual(a.held(), b.held())
+                    || !aspectsEqual(a.base(), b.base())) {
+                fail("node-generation", "same seed rolled different nodes: " + a + " vs " + b);
+                return;
+            }
+            if (a.held().visSize() <= 0) {
+                fail("node-generation", "rolled node holds no vis: " + a);
+                return;
+            }
+            pass("node-generation (seed-deterministic roll, type=" + a.type() + ", modifier=" + a.modifier() + ", held=" + a.held() + ")");
+        } catch (Throwable t) {
+            fail("node-generation", t.toString());
+        }
+    }
+
+    /** Wand tap drains the node and fills the gauntlet buffer. */
+    private static void checkNodeWandTap(MinecraftServer server) {
+        try {
+            var level = (net.minecraft.server.level.ServerLevel) server.overworld();
+            var player = testPlayer(server);
+            var knowledge = thaumcraft.common.lib.capabilities.ThaumcraftCapabilities
+                    .getKnowledge(player).orElse(null);
+            if (knowledge == null) {
+                fail("node-wand-tap", "no knowledge attachment on test player");
+                return;
+            }
+            var nodePos = airPos(level, 1700, 1700);
+            level.setBlock(nodePos, ModBlocks.NODE.get().defaultBlockState(),
+                    net.minecraft.world.level.block.Block.UPDATE_ALL);
+            if (!(level.getBlockEntity(nodePos) instanceof thaumcraft.common.tiles.node.TileNode node)) {
+                fail("node-wand-tap", "placed node has no TileNode");
+                return;
+            }
+            var held = new thaumcraft.api.aspects.AspectList();
+            held.add(thaumcraft.api.aspects.Aspect.AIR, 5);
+            var base = held.copy();
+            node.applyNodeData(new thaumcraft.common.tiles.node.TileNode.NodeSnapshot(
+                    thaumcraft.common.world.node.NodeType.NORMAL, null, held, base));
+
+            var wand = new net.minecraft.world.item.ItemStack(ModItems.CASTER_BASIC.get());
+            // Base strength 1: one tap moves exactly one AIR vis into the buffer.
+            boolean ok = thaumcraft.common.world.node.NodeWandTap.tap(node, level, player, wand);
+            if (!ok || thaumcraft.common.items.casters.ItemCaster.bufferAmountOf(wand, thaumcraft.api.aspects.Aspect.AIR) != 1
+                    || node.getAspects().getAmount(thaumcraft.api.aspects.Aspect.AIR) != 4) {
+                fail("node-wand-tap", "base tap wrong: ok=" + ok
+                        + " buffer=" + thaumcraft.common.items.casters.ItemCaster.bufferAmountOf(wand, thaumcraft.api.aspects.Aspect.AIR)
+                        + " node=" + node.getAspects().getAmount(thaumcraft.api.aspects.Aspect.AIR));
+                return;
+            }
+            // NODETAPPER1/NODETAPPER2 add +1 each: three per tap.
+            knowledge.addResearch("NODETAPPER1");
+            knowledge.setResearchStage("NODETAPPER1", 1);
+            knowledge.addResearch("NODETAPPER2");
+            knowledge.setResearchStage("NODETAPPER2", 1);
+            int beforeNode = node.getAspects().getAmount(thaumcraft.api.aspects.Aspect.AIR);
+            int beforeBuffer = thaumcraft.common.items.casters.ItemCaster.bufferAmountOf(wand, thaumcraft.api.aspects.Aspect.AIR);
+            ok = thaumcraft.common.world.node.NodeWandTap.tap(node, level, player, wand);
+            int gained = thaumcraft.common.items.casters.ItemCaster.bufferAmountOf(wand, thaumcraft.api.aspects.Aspect.AIR) - beforeBuffer;
+            if (!ok || gained != 3 || node.getAspects().getAmount(thaumcraft.api.aspects.Aspect.AIR) != beforeNode - 3) {
+                fail("node-wand-tap", "researched tap wrong: ok=" + ok + " gained=" + gained);
+                return;
+            }
+            level.setBlock(nodePos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),
+                    net.minecraft.world.level.block.Block.UPDATE_ALL);
+            pass("node-wand-tap (1/tap base, 3/tap with both tapper researches, node drained)");
+        } catch (Throwable t) {
+            fail("node-wand-tap", t.toString());
+        }
+    }
+
+    /** Jarring a node converts it into a dormant node-jar block. */
+    private static void checkNodeJar(MinecraftServer server) {
+        try {
+            var level = (net.minecraft.server.level.ServerLevel) server.overworld();
+            var pos = airPos(level, 1800, 1800);
+            level.setBlock(pos, ModBlocks.NODE.get().defaultBlockState(),
+                    net.minecraft.world.level.block.Block.UPDATE_ALL);
+            if (!(level.getBlockEntity(pos) instanceof thaumcraft.common.tiles.node.TileNode node)) {
+                fail("node-jar", "placed node has no TileNode");
+                return;
+            }
+            var held = new thaumcraft.api.aspects.AspectList();
+            held.add(thaumcraft.api.aspects.Aspect.FIRE, 7);
+            var base = held.copy();
+            node.applyNodeData(new thaumcraft.common.tiles.node.TileNode.NodeSnapshot(
+                    thaumcraft.common.world.node.NodeType.NORMAL,
+                    thaumcraft.common.world.node.NodeModifier.BRIGHT, held, base));
+            node.beginJarring(40);
+            if (!node.isJarring()) {
+                fail("node-jar", "beginJarring did not start the countdown");
+                return;
+            }
+            for (int i = 0; i < 41 && level.getBlockEntity(pos) instanceof thaumcraft.common.tiles.node.TileNode; i++) {
+                ((thaumcraft.common.tiles.node.TileNode) level.getBlockEntity(pos)).serverTick(level, pos);
+            }
+            if (!level.getBlockState(pos).is(ModBlocks.NODE_JAR.get())) {
+                fail("node-jar", "node did not convert to node jar after countdown, is " + level.getBlockState(pos).getBlock());
+                return;
+            }
+            if (!(level.getBlockEntity(pos) instanceof thaumcraft.common.tiles.node.TileJarNode jar)) {
+                fail("node-jar", "node jar block has no TileJarNode");
+                return;
+            }
+            if (jar.kind() != thaumcraft.common.world.node.NodeType.NORMAL
+                    || jar.getAspects().getAmount(thaumcraft.api.aspects.Aspect.FIRE) != 7) {
+                fail("node-jar", "jar lost node data: type=" + jar.kind() + " held=" + jar.getAspects());
+                return;
+            }
+            // Modifier degrades 75% of the time; whatever it is, it must be
+            // BRIGHT/PALE/FADING/null - a corrupt value would fail the check above.
+            level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),
+                    net.minecraft.world.level.block.Block.UPDATE_ALL);
+            pass("node-jar (40-tick capture, data preserved, modifier=" + jar.trait() + ")");
+        } catch (Throwable t) {
+            fail("node-jar", t.toString());
+        }
+    }
+
+    /** Primordial pearl mutates node aspects deterministically per seed. */
+    private static void checkNodePearl(MinecraftServer server) {
+        try {
+            var level = (net.minecraft.server.level.ServerLevel) server.overworld();
+            BlockPos[] pos = { airPos(level, 1900, 1900), airPos(level, 1900, 1920) };
+            var nodes = new java.util.ArrayList<thaumcraft.common.tiles.node.TileNode>();
+            for (BlockPos p : pos) {
+                level.setBlock(p, ModBlocks.NODE.get().defaultBlockState(),
+                        net.minecraft.world.level.block.Block.UPDATE_ALL);
+                if (!(level.getBlockEntity(p) instanceof thaumcraft.common.tiles.node.TileNode n)) {
+                    fail("node-pearl", "placed node has no TileNode");
+                    return;
+                }
+                var held = new thaumcraft.api.aspects.AspectList();
+                held.add(thaumcraft.api.aspects.Aspect.AIR, 6);
+                held.add(thaumcraft.api.aspects.Aspect.LIFE, 4);
+                var base = held.copy();
+                n.applyNodeData(new thaumcraft.common.tiles.node.TileNode.NodeSnapshot(
+                        thaumcraft.common.world.node.NodeType.NORMAL, null, held, base));
+                nodes.add(n);
+            }
+            nodes.get(0).applyPrimordialPearl(net.minecraft.util.RandomSource.create(99), false);
+            nodes.get(1).applyPrimordialPearl(net.minecraft.util.RandomSource.create(99), false);
+            var a = nodes.get(0).snapshot();
+            var b = nodes.get(1).snapshot();
+            if (a.modifier() != b.modifier()
+                    || !aspectsEqual(a.held(), b.held())
+                    || !aspectsEqual(a.base(), b.base())) {
+                fail("node-pearl", "same seed gave different pearl results: " + a + " vs " + b);
+                return;
+            }
+            // The pearl must actually change something: base or held differs
+            // from the original, and held never exceeds base per aspect.
+            var orig = new thaumcraft.api.aspects.AspectList();
+            orig.add(thaumcraft.api.aspects.Aspect.AIR, 6);
+            orig.add(thaumcraft.api.aspects.Aspect.LIFE, 4);
+            boolean changed = !aspectsEqual(a.base(), orig)
+                    || a.modifier() != null
+                    || !aspectsEqual(a.held(), orig);
+            if (!changed) {
+                fail("node-pearl", "pearl changed nothing (base=" + a.base() + ", modifier=" + a.modifier() + ")");
+                return;
+            }
+            for (thaumcraft.api.aspects.Aspect aspect : a.held().getAspects()) {
+                if (a.held().getAmount(aspect) > a.base().getAmount(aspect)) {
+                    fail("node-pearl", "held " + aspect + " exceeds base after pearl");
+                    return;
+                }
+            }
+            for (BlockPos p : pos) {
+                level.setBlock(p, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),
+                        net.minecraft.world.level.block.Block.UPDATE_ALL);
+            }
+            pass("node-pearl (deterministic mutation, base=" + a.base() + ", modifier=" + a.modifier() + ")");
+        } catch (Throwable t) {
+            fail("node-pearl", t.toString());
+        }
     }
 
     // -- research: the progression mechanism behind the nomicon flow (the

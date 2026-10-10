@@ -74,7 +74,7 @@ import java.util.Map;
 public class ConfigResearch {
     
     public static final String[] TC_CATEGORIES = {
-        "BASICS", "ALCHEMY", "AUROMANCY", "ARTIFICE", "INFUSION", "GOLEMANCY", "ELDRITCH"
+        "BASICS", "ALCHEMY", "AUROMANCY", "ARTIFICE", "INFUSION", "GOLEMANCY", "ELDRITCH", "NODE"
     };
     
     private static final Identifier BACK_OVER = Identifier.fromNamespaceAndPath("thaumcraft", "textures/gui/gui_research_back_over.png");
@@ -151,6 +151,15 @@ public class ConfigResearch {
                 Identifier.fromNamespaceAndPath("thaumcraft", "textures/gui/gui_research_back_2.png"),
                 BACK_OVER);
         
+        // NODE - aura node system (TC6/Thaumaturge); unlocked by basic auromancy
+        ResearchCategories.registerCategory("NODE", "BASEAUROMANCY",
+                new AspectList()
+                        .add(Aspect.AURA, 20).add(Aspect.MAGIC, 10).add(Aspect.FLUX, 10)
+                        .add(Aspect.CRYSTAL, 5).add(Aspect.LIGHT, 5).add(Aspect.EARTH, 3).add(Aspect.WATER, 3),
+                Identifier.fromNamespaceAndPath("thaumcraft", "textures/research/r_nodes.png"),
+                Identifier.fromNamespaceAndPath("thaumcraft", "textures/gui/gui_research_back_1.png"),
+                BACK_OVER);
+
         // ALCHEMY - requires UNLOCKALCHEMY
         ResearchCategories.registerCategory("ALCHEMY", "UNLOCKALCHEMY",
                 new AspectList()

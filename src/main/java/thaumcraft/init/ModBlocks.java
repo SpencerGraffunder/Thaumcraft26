@@ -43,6 +43,10 @@ import thaumcraft.common.blocks.misc.BlockFluidDeath;
 import thaumcraft.common.blocks.misc.BlockFluidPure;
 import thaumcraft.common.blocks.misc.BlockHole;
 import thaumcraft.common.blocks.misc.BlockNitor;
+import thaumcraft.common.blocks.world.node.BlockJarNode;
+import thaumcraft.common.blocks.world.node.BlockNode;
+import thaumcraft.common.blocks.world.node.BlockNodeStabilizer;
+import thaumcraft.common.blocks.world.node.BlockNodeTransducer;
 import thaumcraft.common.blocks.world.ore.BlockCrystalTC;
 import thaumcraft.common.blocks.world.ore.BlockOreTC;
 import thaumcraft.common.blocks.world.plants.BlockCinderpearl;
@@ -610,6 +614,23 @@ public class ModBlocks {
 
     public static final DeferredHolder<Block, Block> TAINT_FEATURE = registerBlockNoItem("taint_feature",
             BlockTaintFeature::new);
+
+    // ==================== Aura Nodes (TC6 node system) ====================
+
+    public static final DeferredHolder<Block, Block> NODE = registerBlockNoItem("node",
+            BlockNode::new);
+
+    public static final DeferredHolder<Block, Block> NODE_STABILIZER = registerBlock("node_stabilizer",
+            () -> new BlockNodeStabilizer(false));
+
+    public static final DeferredHolder<Block, Block> NODE_STABILIZER_ADVANCED = registerBlock("node_stabilizer_advanced",
+            () -> new BlockNodeStabilizer(true));
+
+    public static final DeferredHolder<Block, Block> NODE_TRANSDUCER = registerBlock("node_transducer",
+            BlockNodeTransducer::new);
+
+    public static final DeferredHolder<Block, Block> NODE_JAR = registerBlockNoItem("node_jar",
+            BlockJarNode::new);
 
     // ==================== Liquid Blocks ====================
 

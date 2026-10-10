@@ -24,6 +24,9 @@ import thaumcraft.common.tiles.essentia.*;
 import thaumcraft.common.tiles.essentia.TileCentrifuge;
 import thaumcraft.common.tiles.essentia.TileEssentiaReservoir;
 import thaumcraft.common.tiles.essentia.TileJarBrain;
+import thaumcraft.common.tiles.node.TileJarNode;
+import thaumcraft.common.tiles.node.TileNode;
+import thaumcraft.common.tiles.node.TileNodeTransducer;
 import thaumcraft.common.tiles.essentia.TileJarVoid;
 import thaumcraft.common.tiles.misc.TileBanner;
 import thaumcraft.common.tiles.misc.TileBarrierStone;
@@ -53,6 +56,20 @@ public class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileJarBrain>> JAR_BRAIN =
             BLOCK_ENTITIES.register("jar_brain",
                     () -> new BlockEntityType<>(TileJarBrain::new, Set.of(ModBlocks.JAR_BRAIN.get())));
+
+    // ==================== Aura nodes ====================
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileNode>> NODE =
+            BLOCK_ENTITIES.register("node",
+                    () -> new BlockEntityType<>(TileNode::new, Set.of(ModBlocks.NODE.get())));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileJarNode>> NODE_JAR =
+            BLOCK_ENTITIES.register("node_jar",
+                    () -> new BlockEntityType<>(TileJarNode::new, Set.of(ModBlocks.NODE_JAR.get())));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileNodeTransducer>> NODE_TRANSDUCER =
+            BLOCK_ENTITIES.register("node_transducer",
+                    () -> new BlockEntityType<>(TileNodeTransducer::new, Set.of(ModBlocks.NODE_TRANSDUCER.get())));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileAlembic>> ALEMBIC =
             BLOCK_ENTITIES.register("alembic",

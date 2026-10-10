@@ -14,6 +14,7 @@ import thaumcraft.common.items.armor.ItemBootsTraveller;
 import thaumcraft.common.items.armor.ItemFortressArmor;
 import thaumcraft.common.items.armor.ItemVoidRobeArmor;
 import thaumcraft.common.items.armor.ItemCultistRobeArmor;
+import thaumcraft.common.items.tools.ItemNodeJar;
 import thaumcraft.common.items.armor.ItemCultistPlateArmor;
 import thaumcraft.common.items.armor.ItemCultistBoots;
 import thaumcraft.common.items.armor.ItemCultistLeaderArmor;
@@ -310,6 +311,9 @@ public class ModItems {
 
     public static final DeferredHolder<Item, Item> PRIMORDIAL_PEARL = registerItem("primordial_pearl",
             ItemPrimordialPearl::new);
+
+    public static final DeferredHolder<Item, Item> NODE_JAR = registerItem("node_jar",
+            () -> new ItemNodeJar(new Item.Properties().stacksTo(16)));
 
     public static final DeferredHolder<Item, Item> TAINT_SLIME = registerItem("taint_slime",
             ItemMaterial::basic);

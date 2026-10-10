@@ -10,6 +10,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import thaumcraft.Thaumcraft;
 import thaumcraft.common.entities.projectile.EntityAlumentum;
+import thaumcraft.common.entities.projectile.EntityAspectOrb;
 import thaumcraft.common.entities.projectile.EntityBottleTaint;
 import thaumcraft.common.entities.projectile.EntityCausalityCollapser;
 import thaumcraft.common.entities.projectile.EntityEldritchOrb;
@@ -454,4 +455,12 @@ public class ModEntities {
                     .clientTrackingRange(10)
                     .updateInterval(20)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Thaumcraft.MODID, "falling_taint"))));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<EntityAspectOrb>> ASPECT_ORB =
+            ENTITY_TYPES.register("aspect_orb", () ->
+                EntityType.Builder.<EntityAspectOrb>of(EntityAspectOrb::new, MobCategory.MISC)
+                    .sized(0.125f, 0.125f)
+                    .clientTrackingRange(6)
+                    .updateInterval(20)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Thaumcraft.MODID, "aspect_orb"))));
 }

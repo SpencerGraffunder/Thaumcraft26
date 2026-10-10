@@ -111,17 +111,17 @@ Status legend: OPEN / FIXED / NOISE / DEFERRED (needs a bigger subsystem first)
 
 | # | Item | 1.12 source | Fix | Status |
 |---|------|-------------|-----|--------|
-| F100 | Node worldgen in aura chunks (aspect/size/density from aura base) | Thaumaturge NodeGenerator | Port | OPEN |
-| F101 | Node data in AuraChunk (aspect, size 1–3, stability) | AuraChunk/Node | Port | OPEN |
-| F102 | Node **tapper**: wand+focus drains node → vis into wand (or node jar) | 1.12 wand logic + Thaumaturge NodeWandTap | Port | OPEN |
-| F103 | **Node stabilizer** (stone): raises stability, slows decay | Thaumaturge BlockEntityNodeStabilizer | Port block+BE | OPEN |
-| F104 | **Node transducer**: pipes vis to a pedestal | Thaumaturge BlockEntityNodeTransducer | Port block+BE | OPEN |
-| F105 | **Node jar**: captures small nodes, stores vis | Thaumaturge BlockEntityNodeJar | Port block+BE | OPEN |
-| F106 | Hungry nodes (rare, high output, unstable) | Thaumaturge NodeHunger | Port | OPEN |
-| F107 | Node orbs (visual/interaction helper) | Thaumaturge BlockEntityNodeOrb | Port | OPEN |
-| F108 | Thaumometer reads node aura when aimed (uses F055) | ItemThaumometer | Port | OPEN |
-| F109 | Node research set (NODES, NODES2, NODESTAB, NODETRANSDUCER, NODEJARS, HUNGRY_NODES, AURAPRESERVE) | Thaumaturge research_entry/node*.json | Port research | OPEN |
-| F110 | Node smoke checks (gen determinism, tapper drain, stabilizer effect) | — | New smoke checks | OPEN |
+| F100 | Node worldgen in aura chunks (aspect/size/density from aura base) | Thaumaturge NodeGenerator | NodeFeature 3-stage worldgen (feature/placed/biome_modifier) + NodeGenerator roll pipeline | **FIXED** (node batch) |
+| F101 | Node data in AuraChunk (aspect, size 1–3, stability) | AuraChunk/Node | TileNode.NodeSnapshot (type, modifier, held, base) persisted in the node BE | **FIXED** (node batch) |
+| F102 | Node **tapper**: wand+focus drains node → vis into wand (or node jar) | 1.12 wand logic + Thaumaturge NodeWandTap | NodeWandTap.tap → wand vis buffer, +1 per tapper research | **FIXED** (node batch) |
+| F103 | **Node stabilizer** (stone): raises stability, slows decay | Thaumaturge BlockEntityNodeStabilizer | BlockNodeStabilizer(+advanced) blocks; fading-node recovery | **FIXED** (node batch) |
+| F104 | **Node transducer**: pipes vis to a pedestal | Thaumaturge BlockEntityNodeTransducer | BlockNodeTransducer + TileNodeTransducer server tick | **FIXED** (node batch) |
+| F105 | **Node jar**: captures small nodes, stores vis | Thaumaturge BlockEntityNodeJar | NodeJarRitual 40-tick capture, 75% modifier degrade, TileJarNode | **FIXED** (node batch) |
+| F106 | Hungry nodes (rare, high output, unstable) | Thaumaturge NodeHunger | NodeHunger pull/eat wired into TileNode tick | **FIXED** (node batch) |
+| F107 | Node orbs (visual/interaction helper) | Thaumaturge BlockEntityNodeOrb | EntityAspectOrb registered (MISC, 0.125) | **FIXED** (node batch) |
+| F108 | Thaumometer reads node aura when aimed (uses F055) | ItemThaumometer | doScan routes node hits to scanNode: chat readout (type/trait/held vis) + NODE research unlocks once | **FIXED** (node batch) |
+| F109 | Node research set (NODES, NODES2, NODESTAB, NODETRANSDUCER, NODEJARS, HUNGRY_NODES, AURAPRESERVE) | Thaumaturge research_entry/node*.json | NODE category in research/node.json (NODE, NODETAPPER1/2, NODESTAB, NODEJARS, NODEPEARLS) | **FIXED** (node batch) |
+| F110 | Node smoke checks (gen determinism, tapper drain, stabilizer effect) | — | node-generation, node-wand-tap, node-jar, node-pearl, node-thaumometer | **FIXED** (node batch) |
 
 ## B7 — Golem AI + legs (was todo #13)
 

@@ -183,6 +183,7 @@ public final class ThaumcraftSmoke {
             checkNodeWandTap(server);
             checkNodeJar(server);
             checkNodePearl(server);
+            checkNodeThaumometer(server);
         } catch (Throwable t) {
             fail("smoke-harness", t.toString());
         }
@@ -729,6 +730,68 @@ public final class ThaumcraftSmoke {
             pass("node-pearl (deterministic mutation, base=" + a.base() + ", modifier=" + a.modifier() + ")");
         } catch (Throwable t) {
             fail("node-pearl", t.toString());
+        }
+    }
+
+    /**
+     * F108: scanning a node reads out its type, trait and held vis and unlocks the
+     * NODE research exactly once. Exercises the exact method doScan routes node hits
+     * to (the wild-scan ray trace itself is a jittered 48-degree cone, not
+     * deterministically aimable).
+     */
+    private static void checkNodeThaumometer(MinecraftServer server) {
+        try {
+            var level = (net.minecraft.server.level.ServerLevel) server.overworld();
+            var player = testPlayer(server);
+            var knowledge = thaumcraft.common.lib.capabilities.ThaumcraftCapabilities
+                    .getKnowledge(player).orElse(null);
+            if (knowledge == null || knowledge.isResearchKnown("NODE")) {
+                fail("node-thaumometer", "no knowledge attachment / already knows NODE");
+                return;
+            }
+            var pos = airPos(level, 2000, 2000);
+            level.setBlock(pos, ModBlocks.NODE.get().defaultBlockState(),
+                    net.minecraft.world.level.block.Block.UPDATE_ALL);
+            if (!(level.getBlockEntity(pos) instanceof thaumcraft.common.tiles.node.TileNode node)) {
+                fail("node-thaumometer", "placed node has no TileNode");
+                return;
+            }
+            var held = new thaumcraft.api.aspects.AspectList();
+            held.add(thaumcraft.api.aspects.Aspect.EARTH, 5);
+            held.add(thaumcraft.api.aspects.Aspect.WATER, 3);
+            node.applyNodeData(new thaumcraft.common.tiles.node.TileNode.NodeSnapshot(
+                    thaumcraft.common.world.node.NodeType.TAINTED,
+                    thaumcraft.common.world.node.NodeModifier.FADING, held, held.copy()));
+            // The scan routes to scanNode: readout in chat + NODE research unlocked.
+            boolean fresh = thaumcraft.common.items.tools.ItemThaumometer.scanNode(player, node);
+            if (!fresh || !knowledge.isResearchKnown("NODE")) {
+                fail("node-thaumometer", "first scan did not unlock NODE: fresh=" + fresh
+                        + " known=" + knowledge.isResearchKnown("NODE"));
+                return;
+            }
+            if (thaumcraft.common.items.tools.ItemThaumometer.unlockNodeResearch(player)) {
+                fail("node-thaumometer", "second unlock reported fresh");
+                return;
+            }
+            var readout = thaumcraft.common.items.tools.ItemThaumometer.nodeScanReadout(node).getString().toLowerCase();
+            if (!readout.contains("tainted") || !readout.contains("fading")
+                    || !readout.contains("terra=5") || !readout.contains("aqua=3")) {
+                fail("node-thaumometer", "readout missing node data: " + readout);
+                return;
+            }
+            // A node without a trait must not NPE in the readout.
+            node.applyNodeData(new thaumcraft.common.tiles.node.TileNode.NodeSnapshot(
+                    thaumcraft.common.world.node.NodeType.NORMAL, null, held, held.copy()));
+            var plain = thaumcraft.common.items.tools.ItemThaumometer.nodeScanReadout(node).getString().toLowerCase();
+            if (!plain.contains("normal") || plain.contains("fading")) {
+                fail("node-thaumometer", "trait-less readout wrong: " + plain);
+                return;
+            }
+            level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),
+                    net.minecraft.world.level.block.Block.UPDATE_ALL);
+            pass("node-thaumometer (readout type/trait/vis, NODE research unlocks once)");
+        } catch (Throwable t) {
+            fail("node-thaumometer", t.toString());
         }
     }
 

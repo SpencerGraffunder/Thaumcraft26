@@ -3,6 +3,7 @@ package thaumcraft.common.items.tools;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -28,6 +29,8 @@ import thaumcraft.common.lib.network.PacketHandler;
 import thaumcraft.common.lib.network.misc.PacketAuraToClient;
 import thaumcraft.common.lib.research.ResearchManager;
 import thaumcraft.common.lib.utils.EntityUtils;
+import thaumcraft.common.tiles.node.TileNode;
+import thaumcraft.common.world.node.NodeModifier;
 import thaumcraft.common.world.aura.AuraChunk;
 import thaumcraft.common.world.aura.AuraHandler;
 import thaumcraft.init.ModSounds;
@@ -162,12 +165,50 @@ public class ItemThaumometer extends ItemTC {
 
         BlockHitResult mop = rayTraceFromPlayerWild(level, player);
         if (mop != null && mop.getType() == HitResult.Type.BLOCK) {
-            ScanningManager.scanTheThing(player, mop.getBlockPos());
+            BlockPos pos = mop.getBlockPos();
+            if (level.getBlockEntity(pos) instanceof TileNode node
+                    && level instanceof ServerLevel serverLevel
+                    && player instanceof ServerPlayer serverPlayer) {
+                scanNode(serverPlayer, node);
+                return;
+            }
+            ScanningManager.scanTheThing(player, pos);
             return;
         }
 
         // No target - scan the sky/void
         ScanningManager.scanTheThing(player, (BlockPos) null);
+    }
+
+    /**
+     * F108: scanning a node reads out its type, trait and held vis in chat and unlocks the
+     * NODE research on first scan. Returns true when the research was newly unlocked.
+     */
+    public static boolean scanNode(ServerPlayer player, TileNode node) {
+        boolean fresh = unlockNodeResearch(player);
+        if (player.connection != null) {
+            player.sendSystemMessage(nodeScanReadout(node));
+        }
+        return fresh;
+    }
+
+    public static boolean unlockNodeResearch(net.minecraft.world.entity.player.Player player) {
+        thaumcraft.api.capabilities.IPlayerKnowledge knowledge = ThaumcraftCapabilities.getKnowledge(player);
+        if (knowledge == null || knowledge.isResearchKnown("NODE")) {
+            return false;
+        }
+        knowledge.addResearch("NODE");
+        return true;
+    }
+
+    public static MutableComponent nodeScanReadout(TileNode node) {
+        MutableComponent c = Component.translatable("node.thaumcraft.type." + node.kind().getSerializedName());
+        NodeModifier trait = node.trait();
+        if (trait != null) {
+            c = c.append(" ").append(Component.translatable("node.thaumcraft.modifier." + trait.getSerializedName()));
+        }
+        c = c.append(": ").append(Component.literal(node.getAspects().toString()).withStyle(ChatFormatting.LIGHT_PURPLE));
+        return c.withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC);
     }
 
     /**

@@ -18,7 +18,7 @@ reference never showed us**, which Thaumaturge makes visible.
 
 | # | Subsystem | 1.12 role | Thaumaturge evidence | Our state |
 |---|-----------|-----------|----------------------|-----------|
-| 1 | **Aura nodes** — node worldgen, node blocks (per-aspect, size 1–3, hungry), node stabilizers, transducers, node jars, node tappers (wand), vis relays, node orbs, AURAPRESERVE | The heart of 1.12 auromancy gameplay | `content/aura/node/` — 26 files, ~3,300 lines (NodeGenerator, NodeHunger, NodeUpkeep, NodeFeature, BlockEntityNode*, BlockNode*, NodeWandTap, NodeBiomeSpread) + `data/.../research_entry/node*.json` research set | **Absent.** No node blocks, no node data in AuraChunk, no node research (our auromancy.json is 1:1 with the *partial* reference, which lacks it too) |
+| 1 | **Aura nodes** — node worldgen, node blocks (per-aspect, size 1–3, hungry), node stabilizers, transducers, node jars, node tappers (wand), vis relays, node orbs, AURAPRESERVE | Core auromancy resource system (TC6/Thaumaturge feature, absent from the 1.12 BETA26 reference) | `content/aura/node/` — 26 files, ~3,300 lines (NodeGenerator, NodeHunger, NodeUpkeep, NodeFeature, BlockEntityNode*, BlockNode*, NodeWandTap, NodeBiomeSpread) + `data/.../research_entry/node*.json` research set | **DONE 2026-10-10** (F100–F110): 5 node blocks + BEs (Node, Stabilizer, StabilizerAdvanced, Transducer, JarNode), `NodeFeature` 3-stage worldgen + `NodeGenerator` deterministic roll pipeline, `NodeWandTap` (wand vis buffer), `NodeJarRitual` capture with modifier degrade, `NodeHunger` wired into the node tick, `EntityAspectOrb`, NODE research category, thaumometer node readout (F108); 5 smoke checks (node-generation/wand-tap/jar/pearl/thaumometer) |
 | 2 | **Golem AI + movement** — ground/air pathfinding, arrow attack, follow-owner, flight/wheel movement | Golems work autonomously; levitator legs = flying golems, wheels = haulers | golem content + commit "rewrite golem darts, flyer legs and return home" | **DONE 2026-10-10** (B7 F120-F125): modern nav stack (Ground/WallClimber/Flying) + `GolemFlyingMoveControl` == 1.12 behavior; arrow AI params exact vs 1.12 `AIArrowAttack`; follow-owner 1.12 fallbacks ported (12-block pathfail + 144-dist teleport-ring, water-wading malus reset); wheel/levitator parts confirmed client-only in 1.12 (NOISE); `golem-follow` smoke check green (gap 196→8 in 200 ticks) |
 | 3 | **Flux pressure events** — chunk flux high → lightning, flux rain, wisps, warp, rift spawns | Iconic 1.12 flux consequences | `content/aura/pressure/` — 11 files (FluxLightning, RainPressureEvent, WispPressureEvent, WarpPressureEvent, NodeMutationPressureEvent, …) | **Absent.** We accumulate flux (smelter/vent check verifies) but nothing ever *does* with it |
 | 4 | **Cultist / Pech / altar-focus AI** | Crimson Cult raiders, Pech trading, altar focus | `content/pech/`, altar content | **DONE 2026-10-10** (B6 F130-F134): combat AI verified equivalent; PortalLesser spawn (10-tick activation, 32-block range, difficulty caps, 66/34 split) ported; Pech trading goals ported; F133/F134 (altar focus / summon ritual) confirmed dead 1.12 code — the `ritualist` flag is never set (NOISE) |
@@ -70,9 +70,9 @@ reference never showed us**, which Thaumaturge makes visible.
 2. ~~Flux pressure events~~ — **done** (2026-10-10): `pressure/` package
    (lightning, rain, wisps, warp, exhaust) wired into `AuraScheduler.raiseEvents`
    with 1.12 weight table; 5 smoke checks.
-3. **Aura node system** — the largest single gap; needs blocks + BEs + worldgen +
-   wand tap + research set; port from 1.12 semantics using Thaumaturge as the
-   second reference.
+3. ~~Aura node system~~ — **done** (2026-10-10, F100–F110): 5 node blocks + BEs,
+   `NodeFeature` worldgen, `NodeWandTap`, `NodeJarRitual`, `NodeHunger`,
+   `EntityAspectOrb`, NODE research set, thaumometer readout; 5 smoke checks.
 4. ~~Golem AI + levitator/wheels~~ — **done** (2026-10-10, B7 F120-F125):
    nav-stack parity verified, arrow AI exact, follow-owner 1.12 fallbacks +
    `golem-follow` smoke check; wheel/levitator parts are client-only in 1.12.

@@ -73,7 +73,7 @@ Status legend: OPEN / FIXED / NOISE / DEFERRED (needs a bigger subsystem first)
 | F052 | Golem bell selection raycast bounds | golems/ItemGolemBell | Verified: 1.12 bell only targets seals (block hit); port's 16-block follow toggle is a deliberate extension with consistent bounds | **FIXED** (verified) |
 | F053 | SealProvide `areGolemTagsValidForTask` (tag validation for provided tasks) | golems/seals/SealProvide | FIXED: was missing entirely — added 1.12 tag validation (lock/owner UUID, required traits containsAll, forbidden traits) to canGolemPerformTask | **FIXED** |
 | F054 | SealUse `mayPlace/dropSomeItems` (placement rules, dropping excess) | golems/seals/SealUse | FIXED: canPlaceAt was hardcoded true; now 1.12 mayPlace semantics (block collision AABB must not contain a living entity); SealHandler re-checks every 20 ticks | **FIXED** |
-| F055 | ItemThaumometer / wand: node reading (depends on nodes) | items/ItemThaumometer | DEFERRED → nodes | DEFERRED |
+| F055 | ItemThaumometer / wand: node reading (depends on nodes) | items/ItemThaumometer | node scan → chat readout (type/trait/vis) + NODE research unlocks once (F108) | **FIXED** (node batch) |
 | F056 | Thaumostatic harness: vis storage + charging | items/ItemThaumostaticHarness | Not in 1.12 BETA26 (pre-1.12 item) | **NOISE** |
 | F057 | Phial fill/empty vs reservoirs (smoke-covered) + phial→water jug? | items/ItemPhial | Smoke-covered (reservoir-phial check); 1.12 has no phial→jug path | **FIXED** (verified) |
 | F058 | Grapple gun: spool/tip items + grapple entity behavior | items/ItemGrappleGun | Not in 1.12 BETA26 (port-specific utility item, self-consistent) | **NOISE** |
